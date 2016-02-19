@@ -6,8 +6,8 @@
 
 
 /* Add shortcode */
-add_shortcode( "fx_toc", "fx_toc_shortcode" );
-add_shortcode( "fx-toc", "fx_toc_shortcode" );
+add_shortcode( "toc", "fx_toc_shortcode" );
+add_shortcode( "toc", "fx_toc_shortcode" );
 
 
 /**
@@ -30,17 +30,34 @@ function fx_toc_shortcode( $atts ){
 		'depth'          => 6,
 		'list'           => 'ul',
 		'title'          => __( 'Table of contents', 'fx-toc' ),
-		'title_tag'      => 'div',
+		'title_tag'      => 'h2',
 	), $atts );
 
-	/* Extract attr for ease use of parameter */
+	$toc = fx_toc_build_toc( $post->post_content, $attr );
+
+	return $toc;
+}
+
+
+/**
+ * Create TOC from content
+ * @since 0.1.0
+ */
+function fx_toc_build_toc( $content, $attr ){
+
+	/* Get globals */
+	global $post, $wp_rewrite, $fx_toc_used_names;
+
+	$default_attr = array(
+		'depth'          => 6,
+		'list'           => 'ul',
+		'title'          => __( 'Table of contents', 'fx-toc' ),
+		'title_tag'      => 'h2',
+	);
+
 	extract( $attr );
 
-	/* Post content to render */
-	//$content = $post_id ? get_post_field( 'post_content', $post_id ) : $post->post_content;
-	$content = $post->post_content;
-
-	/* Set lowest heading number, start with <h1>. <h1> is lower than <h3> */
+	/* Set lowest heading number, default <h1>. <h1> is lower than <h3> */
 	$lowest_heading = 1;
 
 	/* Get the lowest value heading (ie <hN> where N is a number) in the post */
@@ -75,11 +92,11 @@ function fx_toc_shortcode( $atts ){
 	$out = ''; //output
 
 	/* Open sesame */
-	$open = '<div class="table-of-content toc-id-' . get_the_ID() . '">';
+	$open = '<div class="fx-toc fx-toc-id-' . get_the_ID() . '">';
 
 	/* If the Table Of Content title is set, display */
 	if ( $title ){
-		$open .= '<'.$title_tag.' class="toc-title">' . $title . '</'.$title_tag.'>';
+		$open .= '<' . $title_tag . ' class="fx-toc-title">' . $title . '</' . $title_tag . '>';
 	}
 
 	/* Get opening level tags, open the list */
@@ -92,99 +109,92 @@ function fx_toc_shortcode( $atts ){
 	$first = true;
 	$tabs = 1;
 
-		/* the headings */
-		foreach($headings[2] as $i => $heading) {
-			$level = $headings[1][$i][0]; // <hN>
+	/* the headings */
+	foreach( $headings[2] as $i => $heading ) {
+		$level = $headings[1][$i][0]; // <hN>
 
-			if($level > $max_heading) // heading too deep
-				continue;
+		if( $level > $max_heading ){ // heading too deep
+			continue;
+		} 
 
-			if($level > $cur_level) { // this needs to be nested
-				$heading_out .= str_repeat("\t", $tabs+1) . genbu_toc_plugin_open_level( $level, $cur_level, $lowest_heading, $list );
-				$first = true;
-				$tabs += 2;
+		if( $level > $cur_level ) { // this needs to be nested
+			$heading_out .= str_repeat( "\t", $tabs+1 ) . fx_toc_sc_open_level( $level, $cur_level, $lowest_heading, $list );
+			$first = true;
+			$tabs += 2;
+		}
+
+		if( !$first ){
+			$heading_out .= str_repeat( "\t", $tabs ) . "</li>\n";
+		}
+		$first = false;
+
+		if( $level < $cur_level ) { // jump back up from nest
+			$heading_out .= str_repeat( "\t", $tabs-1 ) . fx_toc_sc_close_level( $level, $cur_level, $lowest_heading, $list );
+			$tabs -= 2;
+		}
+
+		$name = fx_toc_sc_get_unique_name( $heading[0] );
+
+		$page_num = 1;
+		$pos = $heading[1];
+
+		/* find the current page */
+		foreach( $next_pages as $p ) {
+			if( $p[1] < $pos ){
+				$page_num++;
 			}
+		}
 
-			if(!$first)
-				$heading_out .= str_repeat("\t", $tabs) . "</li>\n";
-			$first = false;
+		/* fix error if heading link overlap / not hieraricaly correct */
+		if ( $tabs+1 > 0 ){
+			$tabs = $tabs;
+		}
+		else{
+			$tabs = 0;
+		}
 
-			if($level < $cur_level) { // jump back up from nest
-				$heading_out .= str_repeat("\t", $tabs-1) . genbu_toc_plugin_close_level( $level, $cur_level, $lowest_heading, $list );
-				$tabs -= 2;
+		/* For disabled shortcode, need this for shortcode docs in GenbuTheme.com */
+		$heading[0] = str_replace( "[[", "[", $heading[0] );
+		$heading[0] = str_replace( "]]", "]", $heading[0] );
+
+		/**
+		 * output the Contents item with link to the heading.
+		 * Uses unique ID based on the $prefix variable.
+		 */
+		if( $page_num != 1 ){
+			/* pretty permalink */
+			$search_permastruct = $wp_rewrite->get_search_permastruct();
+			if ( !empty( $search_permastruct ) ){
+				$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"" . user_trailingslashit( trailingslashit( get_permalink($post->ID) ) . $page_num ) . "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
 			}
-
-			$name = genbu_toc_plugin_get_unique_name($heading[0]);
-
-			$page_num = 1;
-			$pos = $heading[1];
-
-			/* find the current page */
-			foreach($next_pages as $p) {
-				if($p[1] < $pos)
-					$page_num++;
+			/* ugly permalink */
+			else{
+				$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"?p=" . $post->ID . "&page=" . $page_num . "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
 			}
+		}
+		else
+			$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"" .get_permalink($post->ID). "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
+			
+		$cur_level = $level; // set the current level we are at
+	} // end heading
 
-			/* fix error if heading link overlap / not hieraricaly correct */
-			if ($tabs+1 > 0)
-				$tabs = $tabs;
-			else
-				$tabs = 0;
+	if( !$first ){
+		$close = str_repeat( "\t", $tabs ) . "</li>\n";
+	}
 
-			/* for disabled shortcode, need this for shortcode docs in GenbuTheme.com */
-			$heading[0] = str_replace( "[[", "[", $heading[0] );
-			$heading[0] = str_replace( "]]", "]", $heading[0] );
+	/* get closing level tags, close the list */
+	$close .= fx_toc_sc_close_level( 0, $cur_level, $lowest_heading, $list );
 
-			/**
-			 * output the Contents item with link to the heading.
-			 * Uses unique ID based on the $prefix variable.
-			 */
-			if( $page_num != 1 ){
-				/* pretty permalink */
-				$search_permastruct = $wp_rewrite->get_search_permastruct();
-				if ( !empty( $search_permastruct ) ){
-					$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"" . user_trailingslashit( trailingslashit( get_permalink($post->ID) ) . $page_num ) . "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
-				
-				}
-				/* ugly permalink */
-				else{
-					$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"?p=" . $post->ID . "&page=" . $page_num . "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
-				}
-			}
-			else
-				$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"" .get_permalink($post->ID). "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
-				
-			$cur_level = $level; // set the current level we are at
-		} // end heading
+	/* close sesame */
+	$close .= "</div>\n";
 
-		if(!$first)
-			$close = str_repeat("\t", $tabs) . "</li>\n";
+	/* check if heading exist. */
+	if ( $heading_out )
+		$out = $open . $heading_out . $close;
 
-		/* get closing level tags, close the list */
-		$close .= genbu_toc_plugin_close_level( 0, $cur_level, $lowest_heading, $list );
-
-		/* close sesame */
-		$close .= "</div>\n";
-
-		/* check if heading exist. */
-		if ( $heading_out )
-			$out = $open . $heading_out . $close;
-
-		/* display */
-		return $out;
-
-	
-	
-	
-	
-	
-	
-	
+	/* display */
+	return $out;
 }
-
-
-
-
 
 
 

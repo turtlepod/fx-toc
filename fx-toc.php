@@ -29,7 +29,7 @@ define( 'FX_TOC_PATH', trailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'FX_TOC_URL', trailingslashit( plugin_dir_url( __FILE__ ) ) );
 
 /* Load it on init */
-add_action( 'plugins_loaded', 'fx_toc_load' );
+add_action( 'init', 'fx_toc_load' );
 
 /**
  * Do Stuff.
@@ -42,7 +42,10 @@ function fx_toc_load(){
 
 	/* Load Shortcode Functions  */
 	require_once( FX_TOC_PATH . 'includes/shortcode.php' );
+	require_once( FX_TOC_PATH . 'includes/shortcode-functions.php' );
 
+	/* Filter Content */
+	require_once( FX_TOC_PATH . 'includes/filter-content.php' );
 }
 
 
