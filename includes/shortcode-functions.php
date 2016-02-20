@@ -74,17 +74,8 @@ function fx_toc_sc_get_unique_name( $heading ) {
  * 
  * @since 0.1.0
  */
-function fx_toc_sc_unique_names_reset() {
+function fx_toc_sc_unique_names_reset(){
 	global $fx_toc_used_names;
 	$fx_toc_used_names = array();
 	return true;
 }
-
-
-
-
-
-
-
-
-

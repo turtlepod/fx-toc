@@ -4,14 +4,11 @@
  * @since 0.1.0
 **/
 
-
 /* Add shortcode */
 add_shortcode( "toc", "fx_toc_shortcode" );
-add_shortcode( "toc", "fx_toc_shortcode" );
-
 
 /**
- * [fx-toc] Shortcode to render the TOC
+ * [toc] Shortcode to output the TOC.
  * @since 0.1.0
 **/
 function fx_toc_shortcode( $atts ){
@@ -20,18 +17,20 @@ function fx_toc_shortcode( $atts ){
 	if ( is_admin() || !is_singular() ) return false;
 
 	/* Get globals */
-	global $post, $wp_rewrite, $fx_toc_used_names;
+	global $post;
 
 	/* Reset used names (?) */
 	$fx_toc_used_names = array();
 
 	/* Default shortcode attr */
-	$attr = shortcode_atts( array(
+	$default_args = apply_filters( 'fx_toc_default_args', array(
 		'depth'          => 6,
 		'list'           => 'ul',
 		'title'          => __( 'Table of contents', 'fx-toc' ),
 		'title_tag'      => 'h2',
-	), $atts );
+	) );
+
+	$attr = shortcode_atts( $default_args, $atts );
 
 	$toc = fx_toc_build_toc( $post->post_content, $attr );
 
@@ -43,19 +42,26 @@ function fx_toc_shortcode( $atts ){
  * Create TOC from content
  * @since 0.1.0
  */
-function fx_toc_build_toc( $content, $attr ){
+function fx_toc_build_toc( $content, $args ){
 
 	/* Get globals */
 	global $post, $wp_rewrite, $fx_toc_used_names;
+	fx_toc_sc_unique_names_reset();
 
-	$default_attr = array(
+	/* Shortcode attr */
+	$default_args = apply_filters( 'fx_toc_default_args', array(
 		'depth'          => 6,
 		'list'           => 'ul',
 		'title'          => __( 'Table of contents', 'fx-toc' ),
 		'title_tag'      => 'h2',
-	);
-
+	) );
+	$attr = wp_parse_args( $args, $default_args );
 	extract( $attr );
+
+	/* Sanitize */
+	$list = ( 'ul' == $list ) ? 'ul' : 'ol';
+	$title_tag = strip_tags( $title_tag );
+	$depth = absint( $depth );
 
 	/* Set lowest heading number, default <h1>. <h1> is lower than <h3> */
 	$lowest_heading = 1;
@@ -153,7 +159,7 @@ function fx_toc_build_toc( $content, $attr ){
 			$tabs = 0;
 		}
 
-		/* For disabled shortcode, need this for shortcode docs in GenbuTheme.com */
+		/* For disabled shortcode in heading (for docs for example) */
 		$heading[0] = str_replace( "[[", "[", $heading[0] );
 		$heading[0] = str_replace( "]]", "]", $heading[0] );
 
@@ -162,55 +168,41 @@ function fx_toc_build_toc( $content, $attr ){
 		 * Uses unique ID based on the $prefix variable.
 		 */
 		if( $page_num != 1 ){
-			/* pretty permalink */
+
+			/* Pretty permalink :) */
 			$search_permastruct = $wp_rewrite->get_search_permastruct();
-			if ( !empty( $search_permastruct ) ){
-				$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"" . user_trailingslashit( trailingslashit( get_permalink($post->ID) ) . $page_num ) . "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
+			if ( is_multisite() || !empty( $search_permastruct ) ){
+				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"" . user_trailingslashit( trailingslashit( get_permalink( $post->ID ) ) . $page_num ) . "#" . sanitize_title( $name ). "\">" . $heading[0] . "</a>\n";
 			}
-			/* ugly permalink */
+
+			/* Ugly permalink :( */
 			else{
-				$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"?p=" . $post->ID . "&page=" . $page_num . "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
+				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"?p=" . $post->ID . "&page=" . $page_num . "#" . sanitize_title( $name ). "\">" . $heading[0] . "</a>\n";
 			}
 		}
-		else
-			$heading_out .= str_repeat("\t", $tabs) . "<li>\n" . str_repeat("\t", $tabs+1) . "<a href=\"" .get_permalink($post->ID). "#" . esc_attr($name). "\">" . $heading[0] . "</a>\n";
-			
+		else{
+			$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"" .get_permalink( $post->ID ). "#" . sanitize_title( $name ). "\">" . $heading[0] . "</a>\n";
+		}
+
 		$cur_level = $level; // set the current level we are at
+
 	} // end heading
 
 	if( !$first ){
 		$close = str_repeat( "\t", $tabs ) . "</li>\n";
 	}
 
-	/* get closing level tags, close the list */
+	/* Get closing level tags, close the list */
 	$close .= fx_toc_sc_close_level( 0, $cur_level, $lowest_heading, $list );
 
-	/* close sesame */
+	/* Close sesame */
 	$close .= "</div>\n";
 
-	/* check if heading exist. */
-	if ( $heading_out )
+	/* Check if heading exist. */
+	if ( $heading_out ){
 		$out = $open . $heading_out . $close;
+	}
 
 	/* display */
 	return $out;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
