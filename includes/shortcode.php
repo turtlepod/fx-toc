@@ -14,7 +14,7 @@ add_shortcode( "toc", "fx_toc_shortcode" );
 function fx_toc_shortcode( $atts ){
 
 	/* Bail if not in singular */
-	if ( is_admin() || !is_singular() ) return false;
+	if ( is_admin() ) return false;
 
 	/* Get globals */
 	global $post;
@@ -34,7 +34,7 @@ function fx_toc_shortcode( $atts ){
 
 	$toc = fx_toc_build_toc( $post->post_content, $attr );
 
-	return $toc;
+	return apply_filters( 'fx_toc_output', $toc );
 }
 
 
@@ -172,16 +172,16 @@ function fx_toc_build_toc( $content, $args ){
 			/* Pretty permalink :) */
 			$search_permastruct = $wp_rewrite->get_search_permastruct();
 			if ( is_multisite() || !empty( $search_permastruct ) ){
-				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"" . user_trailingslashit( trailingslashit( get_permalink( $post->ID ) ) . $page_num ) . "#" . sanitize_title( $name ). "\">" . $heading[0] . "</a>\n";
+				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"" . user_trailingslashit( trailingslashit( get_permalink( $post->ID ) ) . $page_num ) . "#" . sanitize_title( $name ). "\">" . strip_tags( $heading[0] ) . "</a>\n";
 			}
 
 			/* Ugly permalink :( */
 			else{
-				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"?p=" . $post->ID . "&page=" . $page_num . "#" . sanitize_title( $name ). "\">" . $heading[0] . "</a>\n";
+				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"?p=" . $post->ID . "&page=" . $page_num . "#" . sanitize_title( $name ). "\">" . strip_tags( $heading[0] ) . "</a>\n";
 			}
 		}
 		else{
-			$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"" .get_permalink( $post->ID ). "#" . sanitize_title( $name ). "\">" . $heading[0] . "</a>\n";
+			$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . "<a href=\"" .get_permalink( $post->ID ). "#" . sanitize_title( $name ). "\">" . strip_tags( $heading[0] ) . "</a>\n";
 		}
 
 		$cur_level = $level; // set the current level we are at
