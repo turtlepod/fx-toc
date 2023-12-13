@@ -39,10 +39,10 @@ function fx_toc_add_span_to_headings( $content ) {
  * @since 0.1.0
  */
 function fx_toc_heading_anchor( $match ) {
-	$name    = fx_toc_sc_get_unique_name( $match[2] );
+	$name    = sanitize_title( fx_toc_sc_get_unique_name( $match[2] ) );
 	$heading = absint( $match[1] );
 	$text    = $match[2];
-	return "<h{$heading}>" . '<span id="' . sanitize_title( $name ) . '">' . $text . '</span>' . "</h{$heading}>";
+	return '<' . tag_escape( "h{$heading}" ) . '>' . '<span id="' . esc_attr( $name ) . '">' . wp_kses_post( $text ) . '</span>' . '</' . tag_escape( "h{$heading}" ) . '>';
 }
 
 

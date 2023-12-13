@@ -15,7 +15,8 @@ function fx_toc_sc_open_level( $new, $cur, $first, $type ) {
 	$levels = $new - $cur;
 	$out    = '';
 	for ( $i = $cur; $i < $new; $i++ ) {
-		$level = $i - $first + 2;
+		$level = absint( $i - $first + 2 );
+		$type  = tag_escape( $type );
 		if ( ( $level % 2 ) == 0 ) {
 			$out .= "<{$type} class='toc-even level-{$level}'>\n";
 		} else {
@@ -31,7 +32,8 @@ function fx_toc_sc_open_level( $new, $cur, $first, $type ) {
  * @since 0.1.0
  */
 function fx_toc_sc_close_level( $new, $cur, $first, $type ) {
-	$out = '';
+	$out  = '';
+	$type = tag_escape( $type );
 	for ( $i = $cur; $i > $new; $i-- ) {
 		$out .= "</{$type}>\n";
 	}

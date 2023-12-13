@@ -51,7 +51,6 @@ function fx_toc_shortcode( $atts ) {
  * @since 0.1.0
  */
 function fx_toc_build_toc( $content, $args ) {
-
 	/* Get globals */
 	global $post, $wp_rewrite, $fx_toc_used_names;
 	fx_toc_sc_unique_names_reset();
@@ -70,8 +69,8 @@ function fx_toc_build_toc( $content, $args ) {
 	extract( $attr );
 
 	/* Sanitize */
-	$list      = ( 'ul' == $list ) ? 'ul' : 'ol';
-	$title_tag = strip_tags( $title_tag );
+	$list      = tag_escape( ( 'ul' == $list ) ? 'ul' : 'ol' );
+	$title_tag = wp_strip_all_tags( $title_tag );
 	$depth     = absint( $depth );
 
 	/* Set lowest heading number, default <h1>. <h1> is lower than <h3> */
@@ -109,17 +108,17 @@ function fx_toc_build_toc( $content, $args ) {
 	$out         = ''; // output
 
 	/* Open sesame */
-	$open = '<div class="fx-toc fx-toc-id-' . get_the_ID() . '">';
+	$open = '<div class="fx-toc fx-toc-id-' . esc_attr( get_the_ID() ) . '">';
 
 	/* If the Table Of Content title is set, display */
 	if ( $title ) {
-		$open .= '<' . $title_tag . ' class="fx-toc-title">' . $title . '</' . $title_tag . '>';
+		$open .= '<' . tag_escape( $title_tag ) . ' class="fx-toc-title">' . wp_kses_post( $title ) . '</' . tag_escape( $title_tag ) . '>';
 	}
 
 	/* Get opening level tags, open the list */
 	$cur = $lowest_heading - 1;
 	for ( $i = $cur; $i < $lowest_heading; $i++ ) {
-		$level = $i - $lowest_heading + 2;
+		$level = absint( $i - $lowest_heading + 2 );
 		$open .= "<{$list} class='fx-toc-list level-{$level}'>\n";
 	}
 
@@ -182,15 +181,15 @@ function fx_toc_build_toc( $content, $args ) {
 			/* Pretty permalink :) */
 			$search_permastruct = $wp_rewrite->get_search_permastruct();
 			if ( is_multisite() || ! empty( $search_permastruct ) ) {
-				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . '<a href="' . user_trailingslashit( trailingslashit( get_permalink( $post->ID ) ) . $page_num ) . '#' . sanitize_title( $name ) . '">' . strip_tags( $heading[0] ) . "</a>\n";
+				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . '<a href="' . esc_url( user_trailingslashit( trailingslashit( get_permalink( $post->ID ) ) . $page_num ) . '#' . sanitize_title( $name ) ) . '">' . wp_strip_all_tags( $heading[0] ) . "</a>\n";
 			}
 
 			/* Ugly permalink :( */
 			else {
-				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . '<a href="?p=' . $post->ID . '&page=' . $page_num . '#' . sanitize_title( $name ) . '">' . strip_tags( $heading[0] ) . "</a>\n";
+				$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . '<a href="?p=' . esc_attr( $post->ID ) . '&page=' . esc_attr( $page_num ) . '#' . sanitize_title( $name ) . '">' . wp_strip_all_tags( $heading[0] ) . "</a>\n";
 			}
 		} else {
-			$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . '<a href="' . get_permalink( $post->ID ) . '#' . sanitize_title( $name ) . '">' . strip_tags( $heading[0] ) . "</a>\n";
+			$heading_out .= str_repeat( "\t", $tabs ) . "<li>\n" . str_repeat( "\t", $tabs + 1 ) . '<a href="' . esc_url( get_permalink( $post->ID ) . '#' . sanitize_title( $name ) ) . '">' . wp_strip_all_tags( $heading[0] ) . "</a>\n";
 		}
 
 		$cur_level = $level; // set the current level we are at

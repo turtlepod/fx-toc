@@ -88,7 +88,7 @@ function fx_toc_plugin_action_links( $links ) {
 	);
 
 	/* Add support link */
-	$links[] = '<a target="_blank" href="' . esc_url( $support_url ) . '">' . __( 'Get Support', 'fx-toc' ) . '</a>';
+	$links[] = '<a target="_blank" href="' . esc_url( $support_url ) . '">' . esc_html__( 'Get Support', 'fx-toc' ) . '</a>';
 	return $links;
 }
 
