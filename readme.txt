@@ -3,8 +3,8 @@ Contributors: turtlepod
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TT23LVNKA3AU2
 Tags: table of contents, toc, shortcode, toc shortcode, heading, wikipedia
 Requires at least: 4.0
-Tested up to: 4.6
-Stable tag: 1.1.0
+Tested up to: 6.4.2
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,14 +12,14 @@ Simple Table Of Contents Plugin. Just add [toc] shortcode in content to display.
 
 == Description ==
 
-**[f(x) TOC](http://genbumedia.com/plugins/fx-toc/)** Simple Table Of Contents Plugin. Just add [toc] shortcode in content to display. This plugin will parse and grab all heading (h1 -h6) in your content and display it as structured table of contents (just like WikiPedia.org table of contents).
+**[f(x) TOC](https://genbumedia.com/plugins/fx-toc/)** Simple Table Of Contents Plugin. Just add [toc] shortcode in content to display. This plugin will parse and grab all heading (h1 -h6) in your content and display it as structured table of contents (just like WikiPedia.org table of contents).
 
 **Features:**
 
 1. Super simple and easy to use.
 1. Auto create Table of contents by listing all your headings in your content.
 1. The GPL v2.0 or later license. :) Use it to make something cool.
-1. Support available at [Genbu Media](http://genbumedia.com/contact/?about=f(x)+TOC).
+1. Support available at [Genbu Media](https://genbumedia.com/contact/?about=f(x)+TOC).
 
 **Shortcode Options:**
 
@@ -57,9 +57,14 @@ The Table of contents output is wrapped in `fx-toc` class. You can style it usin
 
 == Screenshots ==
 
-Check out the demo page: [The Godfather (1972)](http://demo.genbu.me/penny/2016/02/20/the-godfather-1972/)
+Check out the demo page: [The Godfather (1972)](https://genbumedia.com/penny/2016/02/20/the-godfather-1972/)
 
 == Changelog ==
+
+= 1.2.0 - 13 Dec 2023 =
+* Add PHPCS and Husky.
+* Security fix.
+* Add escaping to all tags.
 
 = 1.1.0 - 04 May 2016 =
 * Display TOC on archive pages too.
