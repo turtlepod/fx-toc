@@ -3,7 +3,7 @@
  * Plugin Name: f(x) TOC
  * Plugin URI: http://genbumedia.com/plugins/fx-toc/
  * Description: Simple Table Of Contents Plugin. Just add [toc] shortcode in content to display.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: David Chandra Purnama
  * Author URI: http://shellcreeper.com/
  * License: GPLv2 or later
